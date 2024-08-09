@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+      window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            packages: {'[+]': ['bm']}
+          },
+          svg: {
+            fontCache: 'global'
+          }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/xcode.min.css">
+    <title>Polynomial Regression as a Tool in Education</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="top-box"></div>
+  <section class="title">
+      <h1>Polynomial Regression</h1>
+      <h2>As a Tool in Education</h2>
+      <h3>Written by CMXIX</h3>
+  </section>
+
+  <section class="section">
+      <h2>Introduction</h2>
+      <p>
+          The task of classifying data has motivated the development of numerous machine-learning algorithms.
+          In this paper, we will derive such an algorithm, supported by the seemingly unrelated basics of regression.
+          This approach could lead to faster and more accurate classification of complex relationships.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>The Problem</h2>
+      <p>
+          To highlight the importance of the algorithm, let's focus on an specific usecase:
+          A teacher wants to predict, whether his students will pass or fail his class.
+          The prediction relies on two factors.
+      </p>
+      <ul>
+          <li>The midterm exam score.</li>
+          <li>The attendence rate.</li>
+      </ul>
+      <p>
+          Throughout his teaching career, he has gathered this data for all his students
+          and additionally, if they passed the class.
+          How can he find out, which students will pass his class this year, based on the collected information?
+      </p>
+      <p>
+        Here you can see the plotted data:
+      </p>
+      <img class="myImg" src="Data.png" alt="">
+      <p></p>
+      <a href="student_data.csv" class="link">Download the data here: student_data.csv</a>
+  </section>
+
+  <section class="section">
+      <h2>Representing Data</h2>
+      <p>
+          Our journey cannot begin without a good mathematical understanding of our data.
+          We will think of each student $S_k$, as a tuple $(x_k, y_k, z_k) \in \mathbb{R}^3$,
+          where
+      </p>
+      <ul>
+          <li>The value of $x_k$ is the midterm exam score, and thus $x_k \in \left[ 0,1 \right]$.</li>
+          <li>The value of $y_k$ is the attendance rate, and thus $y_k \in \left[ 0,1 \right]$ as well.</li>
+          <li>The value of $z_k$ is given by
+              <p>
+              \[
+              z_k =
+              \begin{cases}
+                  1,& \text{if the student passed}\\
+                  -1,& \text{otherwise}
+              \end{cases}
+              \]
+              </p>
+          </li>
+      </ul>
+      <p>Thus we will collect this data in the following vectors:</p>
+      <p>
+      \[
+      \mathbf{x} = \begin{bmatrix}
+                  x_{1} \\
+                  x_{2} \\
+                  \vdots \\
+                  x_{n}
+              \end{bmatrix}
+              \quad
+              \mathbf{y} = \begin{bmatrix}
+                  y_{1} \\
+                  y_{2} \\
+                  \vdots \\
+                  y_{n}
+              \end{bmatrix}
+              \quad
+              \mathbf{z} = \begin{bmatrix}
+                  z_{1} \\
+                  z_{2} \\
+                  \vdots \\
+                  z_{n}
+              \end{bmatrix}
+      \]
+      </p>
+      <p>and group it in a matrix</p>
+      <p>
+      \[
+      \mathbf{S} = \begin{bmatrix}
+                S_1 \\
+                S_2 \\
+                \vdots \\
+                S_n
+            \end{bmatrix} =
+            \begin{bmatrix}
+                x_1 & y_1 & z_1 \\
+                x_2 & y_2 & z_2 \\
+                \vdots & \vdots & \vdots \\
+                x_n & y_n & z_n
+            \end{bmatrix}
+      \]
+      </p>
+      <p>
+          with $n \in \mathbb{N}$ being the amount of students recorded.
+          To get a visual understanding of our data, each $S_k$,
+          will be marked as a point in the Cartesian Plane, with coordinates $(x_k, y_k)$.
+          The value of $z_k$ will determine the color of the point.
+          If $z_k = 1$, the point will be green, but if $z_k = -1$, the point will be red.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>The Plan</h2>
+      <p>
+          This short section is devoted to explaining how we will tackle the problem.
+          As portrayed in Figure 4.1, we will attempt to find a polynomial function $f$,
+          which visually is a boundary line, between the different colored points.
+          Mathematically, this can be understood as finding an $f \in \mathbb{R}[x]$,
+          such that, all $S_k \in \mathbf{S}$ with $z_k = 1$ satisfy the inequality, $y_k > f(x_k)$,
+          and all $S_k \in \mathbf{S}$ with $z_k = -1$ satisfy the inequality, $y_k \leq f(x_k)$.
+      </p>
+      <p>
+          With this approach, given a new student located at $(x,y)$, we can identify
+          if he will pass or fail the class, by determining which of the inequalities he satisfies.
+          Notice that the student must always satisfy precisely one of the inequalities.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>Linear Regression</h2>
+      <p>
+          For anyone familiar with the concept, it might seem out of place, and irrelevant for the problem,
+          but in the next section, we will think out of the box and see how this is the perfect tool.
+      </p>
+      <p>
+          For this section only, the data will be different. Let
+      </p>
+      <p>
+      \[
+      \mathbf{D} = \begin{bmatrix}
+              D_1 \\
+              D_2 \\
+              \vdots \\
+              D_N
+          \end{bmatrix} =
+          \begin{bmatrix}
+              x_1 & y_1 \\
+              x_2 & y_2 \\
+              \vdots & \vdots \\
+              x_N & y_N
+          \end{bmatrix}
+      \]
+      </p>
+      <p>
+          A linear regression model, is a function $f$ of the
+          form $f(x) = \theta_1 x + \theta_0$, where $\theta_1, \theta_0 \in \mathbb{R}$,
+          which attempts to model the linear relationship in the data.
+          The idea is to find the ideal values of $\theta_1, \theta_0$,
+          which are called the parameters of $f$.
+          When trained, $f$ can be used to predict the $y$, for some $x$ which isn't in the data.
+      </p>
+      <p>
+          Visually, $f$ is a line, which tries to hit all points $D_k \in \mathbf{D}$,
+          even though, it might not be perfectly achievable.
+          This entire algorithm, as many others, require a loss function.
+      </p>
+      <p>
+          Given the coefficients of $f$, a loss function, $L$
+          measures the models ability to correctly predict values of $y_k$.
+          A huge loss, implies a bad model, while a minimal loss, suggests a great model.
+          Many different loss functions exist, but the one to be shown is the most common.
+      </p>
+      <p>
+          Let $L: \mathbb{R}^2 \rightarrow \mathbb{R}$.
+          The <b>Mean Squared Error</b> loss function, is given by.
+      </p>
+      <p>
+      \[
+        L(\theta_0, \theta_1) = \frac{1}{N}
+        \sum_{i=1}^N (y_i - f(x_i))^2
+      \]
+      </p>
+      <p>
+          With each $(x_k, y_k) \in \mathbf{D}$.
+          We will attempt to minimize this function, using an algorithm called <b>Gradient Descent</b>.
+      </p>
+      <p>
+          Gradient descent is an iterative process,
+          where all $\theta_i$ start as $0$, and approach the intended value.
+          For all $\theta_i$ we apply this rule, after every iteration:
+      </p>
+      <p>
+      \[
+      \theta_i :=
+      \theta_i - \eta \frac{\partial L}{\partial \theta_i}
+      \]
+      </p>
+      <p>
+          That is, $\theta_i$ is decreased, by the direction of steepest ascent.
+      </p>
+      <p>
+          The symbol $\eta$ (read eta) is called the learning rate, and scales this value appropriately.
+          Typically, $\eta$ ranges somewhere between $0.001$ and $0.01$.
+          The smaller learning rate, the more iterations needed to find the minimum,
+          the slower our program. If one tries to increase the learning rate,
+          off of this reason alone, a big problem arises.
+      </p>
+      <p>
+          Suppose $L(\theta_0, \theta_1)$ is already close to its minimum.
+          If we adjust each $\theta_i$ massively, we might overshoot the minimum,
+          thus never finding it.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>Returning to the Problem</h2>
+      <p>
+          Suppose, the passed and failed students, can be separated by a straight line.
+          The loss function's role in the linear regression algorithm,
+          was to define what we are attempting to achieve. We used the MSE loss function,
+          to fit to a set of data-points.
+          If we want to make a boundary line, we just have to modify the loss function!
+      </p>
+      <p>
+          We must create a loss function, which rewards red points being below the line,
+          and green being above the line, while additionally, punish red points being above the line,
+          and green points being below the line. Let's get to work!
+      </p>
+      <p>
+          For any student $S_k \in \mathbf{S}$ we got four scenarios to cover:
+      </p>
+      <ul>
+        <li> $z_k = 1$, but $y_k < f(x_k)$ (punish). </li>
+        <li> $z_k = 1$, and $y_k \geq f(x_k)$ (reward). </li>
+        <li> $z_k = -1$, but $y_k \geq f(x_k)$ (punish). </li>
+        <li> $z_k = -1$, and $y_k < f(x_k)$ (reward). </li>
+      </ul>
+      <p>
+          Notice how the term $f(x_k) - y_k$, is positive for points below line,
+          and negative for points above.
+      </p>
+      <ul>
+        <li>If the point is below the line and green, we do nothing, since positive values are punishing.</li>
+        <li>If the point is below the line and red, we multiply by $-1$, to get a negative value.</li>
+        <li>If the point is above the line and green, we do nothing.</li>
+        <li>If the point is above the line and red, we multiply by $-1$ to get a negative value.</li>
+      </ul>
+      <p>
+          In each case, we actually multiply the expression by $z_k$!
+          That is, the loss for each point can be expressed as $z_k(f(x_k) - y_k)$.
+      </p>
+      <p>
+          Now, I will try augmenting, that rewarding the model doesn't do us any good.
+          Suppose two points $(x_1, y_1)$ and $(x_2, y_2)$,
+          with $x_1 \neq x_2$, have the property $|f(x_1) - y_1| = |f(x_2) - y_2|$.
+          The point $(x_1, y_1)$ is correctly classified by the model, while the point
+          $(x_2, y_2)$ is not. In the loss function, these will cancel out,
+          making the mistake irrelevant. This is a huge issue, which is why we will remove the rewarding.
+      </p>
+      <p>
+          If the value of $z_k(f(x_k) - y_k)$ is negative, we want it to become 0.
+          Hence we end with $\text{max}(0, z_k(f(x_k) - y_k))$.
+      </p>
+      <p>We calculate the average of this value over all points, and get the final loss function.</p>
+      <p>
+      \[
+      L(\theta_0, \theta_1) = \frac{1}{n}
+        \sum_{k=1}^{n} \text{max}(0, z_k(f(x_k) - y_k))
+      \]
+      </p>
+      <p>
+          This is perfect! Minimizing this function, will allow for finding the ideal $\theta_1$ and $\theta_0$.
+          Simply modifying the loss function is enough to change the use of the regression model completely.
+          To use the gradient descent algorithm, which actually will let us determine $\theta_1$ and $\theta_0$,
+          we must compute the partial derivatives of $L$. We will wait for this step, cause there is an issue to address.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>The Issue</h2>
+      <p>
+          Go back to the beginning of the last section. What do you notice?
+          We <b>supposed</b> that the dots can be separated with a straight line.
+          This tends to be a failing assumption, as real-world data tends to be more complex.
+          Luckily, the idea of regression isn't limited to straight lines.
+          In the next section we will resolve this issue.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>Polynomial Regression</h2>
+      <p>
+          This model, will successfully tackle the complexity of our data.
+          A polynomial regression model is a function
+          $f: \mathbb{R} \rightarrow \mathbb{R}$ of the form
+      </p>
+      <p>
+      \[
+        f(x) = \sum_{i=0}^d \theta_i x^i = \Theta^{\intercal} \mathbf{x}
+      \]
+      </p>
+      <p>for vectors</p>
+      <p>
+        \[
+          \begin{aligned}
+            \Theta &= \begin{bmatrix}
+              \theta_0 \\
+              \theta_1 \\
+              \vdots \\
+              \theta_d
+          \end{bmatrix}
+          &
+
+          \mathbf{x} &= \begin{bmatrix}
+            x^0 \\
+            x^1 \\
+            \vdots \\
+            x^d
+          \end{bmatrix}
+          \end{aligned}
+          \]
+        </p>
+      <p>
+          with $d \in \mathbb{N}$, being the so called <i>degree</i> of the polynomial $f$.
+          I will not be the first to admit, that this is a mouthful, compared to simple linear regression,
+          but the possibilities are rewarding, and suit our problem.
+          The rest of the steps are exactly the same, as with linear regression.
+          We will use the previously found loss function, with a minor adjustment,
+          compute the partial derivatives, and we are done!
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>Calculating the Partial Derivatives</h2>
+      <p>
+          We must start by changing the loss function around a little.
+          Since it's input was the coefficients of the linear model, there are a few more now.
+          Let $L: \mathbb{R}^{d+1} \rightarrow \mathbb{R}$, with
+      </p>
+      <p>
+      \[
+      L(\Theta) = \frac{1}{n}
+        \sum_{k=1}^{n} \text{max} \left(0, z_k \left(\sum_{i=0}^d \theta_i x_k^i - y_k\right) \right)
+      \]
+      </p>
+      <p>We have to find a formula for the partial derivative with respect to some $\theta_j$.</p>
+      <p>
+      \[
+      \frac{\partial L}{\partial \theta_j} = \frac{1}{n}
+        \sum_{k=1}^n \frac{\partial}{\partial \theta_j} \left[
+        \text{max} \left(0, z_k \left(\sum_{i=0}^d \theta_i x_k^i - y_k\right) \right)\right]
+      \]
+      </p>
+      <p>This can be divided into cases,</p>
+      <p>
+      \[
+      \frac{\partial L}{\partial \theta_j} = \frac{1}{n}
+      \sum_{k=1}^n \begin{cases}
+      z_k x_k^j & \text{if } z_k (f(x_k)-y_k) > 0 \\
+      0 & \text{if } z_k (f(x_k)-y_k) \leq 0
+      \end{cases}
+      \]
+      </p>
+      <p>This is because,</p>
+      <p>
+      \[
+      \frac{\partial L}{\partial \theta_j} [z_k (f(x_k)-y_k)] = z_k x_k^j
+      \]
+      </p>
+      <p>This notation can be further simplified,</p>
+      <p>
+      \[
+      \frac{\partial L}{\partial \theta_j} = \frac{1}{n}
+       \sum_{k=1}^{n} z_k x_k^j \cdot \mathbb{1}_{\left\{ z_k (f(x_k)-y_k) > 0 \right\}}
+      \]
+      </p>
+      <p>
+          which is our final expression.
+          We did it! We have everything we need to use the gradient descent algorithm.
+      </p>
+  </section>
+
+  <section class="section">
+      <h2>Ending the Problem</h2>
+      <p>
+          To stick to our standards of formality and mathematical rigor, $f$
+          cannot be considered a model. The model is what we described in section 3,
+          and can be represented as follows.
+      </p>
+      <p>
+      \[
+        m(x,y) = \begin{cases}
+            1,& \text{if } y > f(x)\\
+            -1,& \text{if } y \leq f(x)
+        \end{cases}
+      \]
+      </p>
+      <p>And there it is!</p>
+      <p>
+          Since basic gradient descent works,
+          we will not delve into the many optimization techniques for the algorithm.
+          Instead, we will end off with a program, which will perform the discussed steps,
+          and find the polynomial function separating the data shown in section 2.
+          Let's run through what our program has to do.
+      </p>
+      <ol>
+        <li>Read the data, from a CSV file.</li>
+        <li>Initialize constants necessary for the gradient descent algorithm
+          (i.e. learning rate, iterations and polynomial degree).</li>
+        <li>Compute the partial derivatives for all coefficients of $f$.</li>
+        <li>Perform gradient descent.</li>
+        <li>Repeat steps 3 to 4, as many times as the iteration constant specifies.</li>
+        <li>Plot the data, and the polynomial</li>
+      </ol>
+      <p>The code can be found here, in the programming language, Python.</p>
+      <pre><code class="python">
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Step 1: Read the data from a CSV file without headers
+data = pd.read_csv('student_data.csv', header=None)
+x = data.iloc[:, 0].values  # Midterm exam scores
+y = data.iloc[:, 1].values  # Attendance rates
+z = data.iloc[:, 2].values  # Pass (1) or Fail (-1)
+
+# Step 2: Initialize constants
+learning_rate = 0.1
+iterations = 50000
+degree = 2  # Degree of the polynomial
+
+# Step 3: Initialize polynomial coefficients
+theta = np.zeros(degree + 1)
+
+# Step 4: Define the polynomial function
+def polynomial(x, theta):
+  return sum(theta[i] * x ** i for i in range(len(theta)))
+
+# Step 5: Define the loss function
+def loss_function(x, y, z, theta):
+  n = len(x)
+  loss = 0
+  for k in range(n):
+    f_xk = polynomial(x[k], theta)
+    loss += max(0, z[k] * (f_xk - y[k]))
+  return loss / n
+
+# Step 6: Define the partial derivatives
+def partial_derivatives(x, y, z, theta):
+  n = len(x)
+  partials = np.zeros_like(theta)
+  for j in range(len(theta)):
+    for k in range(n):
+      f_xk = polynomial(x[k], theta)
+      partials[j] += z[k] * x[k] ** j * (z[k] * (f_xk - y[k]) > 0)
+  partials[j] /= n
+return partials
+
+# Step 7: Perform gradient descent
+for _ in range(iterations):
+  gradients = partial_derivatives(x, y, z, theta)
+  theta -= learning_rate * gradients
+
+# Step 8: Plot the data and the polynomial
+plt.scatter(x[z == 1], y[z == 1], color='green', label='Pass')
+plt.scatter(x[z == -1], y[z == -1], color='red', label='Fail')
+
+# Generate values for plotting the polynomial curve
+x_values = np.linspace(min(x), max(x), 100)
+y_values = polynomial(x_values, theta)
+
+plt.plot(x_values, y_values, color='blue', label='Decision Boundary')
+plt.xlabel('Midterm Exam Score')
+plt.ylabel('Attendance Rate')
+plt.title('Polynomial Regression Decision Boundary')
+plt.legend()
+plt.show()
+
+print(loss_function(x, y, z, theta))
+        </code></pre>
+        <a class="link" href="https://colab.research.google.com/drive/1wA1M8XtTkyiu5fs65OOws0g8I23YJK-Y?usp=sharing">
+        Run the code here</a>
+      <p>Or see the resulting plot here:</p>
+      <img class="myImg" src="Model.png" alt="">
+  </section>
+
+  <section class="section">
+      <h2>Conclusion</h2>
+      <p>
+          And that's it. We have developed a method, for the teacher to identify
+          which students will fail or pass the class. Notice, this can be used in many other instances.
+          I have not myself seen binary classification performed this way,
+          which is why I wanted to present it to you, and everybody else reading.
+          Thank you sincerely, for reading through this entire article.
+          I wish you the best, on your personal machine learning journey!
+      </p>
+  </section>
+
+  <!-- Include Highlight.js JavaScript file -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
+      <!-- Initialize Highlight.js -->
+      <script>hljs.highlightAll();</script>
+</body>
+</html>
