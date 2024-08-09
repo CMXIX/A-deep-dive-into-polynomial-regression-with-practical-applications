@@ -1,1 +1,1 @@
-# A-deep-dive-into-polynomial-regression-with-practical-applications
+# Polynomial-Regression-as-a-Tool-in-Education
