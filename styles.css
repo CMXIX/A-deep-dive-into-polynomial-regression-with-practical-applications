@@ -49,4 +49,6 @@ ul {
   display: block;
   margin-left: auto;
   margin-right: auto;
+  width: 50vw; /* The image will take up 50% of the viewport width */
+  height: auto;
 }
